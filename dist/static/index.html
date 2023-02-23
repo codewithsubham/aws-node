@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload video</title>
+</head>
+
+<body>
+    <div>
+        <label for="file">select file</label>
+        <input type="file" id="file">
+    </div>
+    <div>
+        <input type="button" id="submit" value="submit">
+    </div>
+</body>
+
+<script>
+
+
+
+
+
+    const fileInput = document.getElementById('file');
+    let start = 0
+    fileInput.addEventListener("change", async (req, res) =>
+    {
+
+        const file = fileInput.files[0];
+        let response = await fetch("/checkmetadata", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+
+            },
+            body: JSON.stringify({
+                filename: file['name']
+            }),
+        })
+
+        let data = await response.json();
+
+        state = data.size
+
+    })
+    document.getElementById('submit').addEventListener('click', async () =>
+    {
+
+        const reader = new FileReader();
+        const file = fileInput.files[0];
+
+        reader.onload = async (event) =>
+        {
+
+            const CHUNK_SIZE = 10000;
+            const chunkCount = event.target.result.byteLength / CHUNK_SIZE;
+
+            for (let chunkid = 0; chunkid < chunkCount + 1; chunkid++)
+            {
+
+                const chunk = event.target.result.slice(start + chunkid * CHUNK_SIZE, start + chunkid * CHUNK_SIZE + CHUNK_SIZE)
+
+                const formData = new FormData();
+                formData.append('name', 'John Doe');
+
+                const arrayBuffer = chunk;
+                const arrayBufferBlob = new Blob([arrayBuffer]);
+
+                let response = await fetch("/upload", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'name': file.name
+                    },
+                    body: chunk,
+                })
+
+            }
+
+
+        }
+
+        reader.readAsArrayBuffer(file)
+
+    })
+
+
+
+</script>
+
+</html>
